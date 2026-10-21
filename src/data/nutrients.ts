@@ -105,11 +105,24 @@ export const nutrientMap = Object.fromEntries(
   nutrients.map((n) => [n.id, n])
 ) as Record<string, Nutrient>;
 
+export type FoodSource = "usda" | "label" | "label+estimated" | "estimated";
+
 export interface Food {
   id: string;
   name: string;
   emoji: string;
+  /** All values are per 100 g. */
   values: Record<string, number | null>;
+  /** Packaged product fields — absent on generic USDA foods. */
+  brand?: string;
+  ean?: string;
+  packageG?: number;
+  source?: FoodSource;
+  confidence?: "high" | "moderate" | "low";
+  /** false = contains animal-derived ingredients beyond dairy/egg (gelatine, collagen, animal rennet, meat, fish). Omitted = not assessed. */
+  vegetarian?: boolean;
+  /** How estimated values were derived; which values are label vs proxy. */
+  notes?: string;
 }
 
 export const foods: Food[] = [
@@ -351,6 +364,209 @@ export const foods: Food[] = [
       calcium: 100, iron: 0.1, magnesium: 11, zinc: 0.52, selenium: 9.7, potassium: 141, phosphorus: 135, copper: 0.02, manganese: 0.01, iodine: 35, chromium: null, sodium: 47,
       epa: 0, dha: 0, ala: 30, omega6: 70, saturated: 3.2,
       choline: 15, creatine: null, taurine: null, coq10: null, astaxanthin: 0, betaCarotene: 3, lutein: 0, lycopene: 0, betaine: null, glycine: 100, collagen: null, sulforaphane: 0,
+    },
+  },
+
+  // ---------------------------------------------------------------------------
+  // Packaged products Tudor actually eats (added 2026-10-20 from pack photos).
+  // Macros, salt and anything named in `notes` as "label" are transcribed from
+  // the EU nutrition panel (per 100 g). Micros are NOT on the pack: they are
+  // USDA SR Legacy proxies scaled by the ingredient fractions on the label
+  // (formula in `notes`). sodium = salt × 400. null = unknown, don't guess.
+  // Full provenance per item: body-os data/food/foods.yaml.
+  // ---------------------------------------------------------------------------
+  {
+    id: "sanovitaTofuMasline",
+    name: "SanoVita Tofu Măsline",
+    emoji: "🧈",
+    brand: "SanoVita",
+    ean: "5941882803226",
+    packageG: 200,
+    source: "label+estimated",
+    confidence: "moderate",
+    notes: "Label: kcal, protein, fat, carbs, fiber, saturated, sodium (salt 1.5 g), magnesium 120 mg, omega6 (linoleic 7.1 g). Vegan; soy; MgCl2-coagulated (no calcium salt), olives 12%. Micros = USDA 'tofu, firm' ×1.0 (protein 17.3 ≈ 17.6) + 0.12 × USDA ripe olives. Calcium LOW confidence (nigari-only tofu, range 150–350). Label fat 14.8 g is ~5 g above what soy + olives explain — kept as printed.",
+    values: {
+      kcal: 207, protein: 17.6, fat: 14.8, carbs: 0, fiber: 1.7,
+      vitA: 2, vitB1: 0.16, vitB2: 0.10, vitB3: 0.4, vitB5: 0.13, vitB6: 0.09, vitB7: null, vitB9: 29, vitB12: 0, vitC: 0, vitD: 0, vitE: 0.3, vitK: 2.4,
+      calcium: 200, iron: 3.1, magnesium: 120, zinc: 1.6, selenium: 17, potassium: 240, phosphorus: 190, copper: 0.4, manganese: 1.2, iodine: null, chromium: null, sodium: 600,
+      epa: 0, dha: 0, ala: 600, omega6: 7100, saturated: 2.2,
+      choline: 28, creatine: 0, taurine: 0, coq10: null, astaxanthin: 0, betaCarotene: 10, lutein: 0, lycopene: 0, betaine: null, glycine: 740, collagen: 0, sulforaphane: 0,
+    },
+  },
+  {
+    id: "bornWinnerSlimChocHazelnut",
+    name: "Born Winner Slim 50% bar — Chocolate & Hazelnut",
+    emoji: "🍫",
+    brand: "Born Winner",
+    packageG: 50,
+    source: "label+estimated",
+    confidence: "low",
+    vegetarian: false,
+    notes: "NOT vegetarian: hydrolysed bovine gelatine. Label: kcal, protein, fat, carbs 29 (of which polyols 27, sugars 1.3), fiber, saturated, sodium (salt 0.55 g). Ingredients (sezamo.ro, 60 g SKU, same recipe): milk protein, whey concentrate, soy protein isolate, sorbitol, gelatine, maltitol cocoa coating 10%, palm/shea fats, sunflower oil, cocoa 2%. Protein-blend ratio undisclosed, so every mineral here is a placeholder: calcium assumes ~half the protein is milk-protein concentrate (range 200–800). Collagen (from gelatine) present, amount unknown.",
+    values: {
+      kcal: 370, protein: 50, fat: 10.6, carbs: 29, fiber: 0.5,
+      vitA: null, vitB1: null, vitB2: 0.3, vitB3: null, vitB5: null, vitB6: null, vitB7: null, vitB9: null, vitB12: 0.5, vitC: 0, vitD: 0, vitE: null, vitK: null,
+      calcium: 400, iron: 2, magnesium: 50, zinc: 1.5, selenium: null, potassium: 300, phosphorus: 400, copper: null, manganese: null, iodine: null, chromium: null, sodium: 220,
+      epa: 0, dha: 0, ala: null, omega6: null, saturated: 4.3,
+      choline: null, creatine: null, taurine: null, coq10: null, astaxanthin: 0, betaCarotene: 0, lutein: 0, lycopene: 0, betaine: null, glycine: null, collagen: null, sulforaphane: 0,
+    },
+  },
+  {
+    id: "joxtyProteinChipsChilliLime",
+    name: "Joxty Protein Chips Chilli & Lime",
+    emoji: "🌶️",
+    brand: "Joxty (Enjoy Chips Agricola, IT)",
+    packageG: 50,
+    source: "label+estimated",
+    confidence: "low",
+    notes: "Label: kcal, protein, fat, carbs, fiber, saturated, sodium (salt 2.2 g). Vegan, gluten-free; soy. Ingredients: potato granules 28%, potato starch, soy protein 20%, sunflower oil, flavouring 4%, salt. Minerals = 0.28 × USDA dehydrated potato flakes + 0.20 × USDA soy protein isolate (SPI iron varies 10–15 mg, so iron is a guess). Vit E and omega-6 treat all 26 g fat as sunflower oil (~41 mg α-TE, ~60% linoleic per 100 g oil) — vit E is the one notable micro here. Vit C assumes heavy frying loss.",
+    values: {
+      kcal: 496, protein: 22, fat: 26, carbs: 44, fiber: 2.0,
+      vitA: 0, vitB1: null, vitB2: null, vitB3: 1.7, vitB5: null, vitB6: 0.2, vitB7: null, vitB9: 40, vitB12: 0, vitC: 5, vitD: 0, vitE: 10, vitK: null,
+      calcium: 45, iron: 3.2, magnesium: 30, zinc: 1.0, selenium: null, potassium: 320, phosphorus: 205, copper: 0.4, manganese: 0.4, iodine: null, chromium: null, sodium: 880,
+      epa: 0, dha: 0, ala: 50, omega6: 15600, saturated: 3.0,
+      choline: 45, creatine: 0, taurine: 0, coq10: null, astaxanthin: 0, betaCarotene: null, lutein: 0, lycopene: 0, betaine: null, glycine: 900, collagen: 0, sulforaphane: 0,
+    },
+  },
+  {
+    id: "veraMiniKorniszony",
+    name: "Vera mini korniszony (cornichons, sweet-sour)",
+    emoji: "🥒",
+    brand: "Vera (PL)",
+    ean: "5904378641320",
+    packageG: 350,
+    source: "estimated",
+    confidence: "low",
+    notes: "Nutrition panel not on the photographed face — EVERYTHING estimated. Ingredients: cucumbers 53%, water, sugar (3rd!), salt, acetic acid, red pepper, spices 0.52% (mustard, dill, pepper), onion. Proxy: Polish 'korniszony z przyprawami' listings (35–41 kcal, 4.5–5 g sugar) + USDA 'pickles, cucumber, sweet' for minerals/vit K. Replace with the pack's own panel when photographed; at 25 g the error is <5 kcal.",
+    values: {
+      kcal: 35, protein: 0.8, fat: 0.2, carbs: 6, fiber: 1.0,
+      vitA: 5, vitB1: null, vitB2: null, vitB3: null, vitB5: null, vitB6: null, vitB7: null, vitB9: null, vitB12: 0, vitC: 1, vitD: 0, vitE: null, vitK: 20,
+      calcium: 30, iron: 0.3, magnesium: 8, zinc: null, selenium: null, potassium: 120, phosphorus: null, copper: null, manganese: null, iodine: null, chromium: null, sodium: 720,
+      epa: 0, dha: 0, ala: null, omega6: null, saturated: 0,
+      choline: null, creatine: 0, taurine: 0, coq10: null, astaxanthin: 0, betaCarotene: null, lutein: null, lycopene: 0, betaine: null, glycine: null, collagen: 0, sulforaphane: 0,
+    },
+  },
+  {
+    id: "ribellaHummusCaramelizedGarlic",
+    name: "Ribella Hummus Caramelized Garlic",
+    emoji: "🫘",
+    brand: "Ribella (RS)",
+    ean: "8606011893543",
+    packageG: 200,
+    source: "label+estimated",
+    confidence: "moderate",
+    notes: "Label: kcal, protein, fat, carbs, fiber, saturated, sodium (salt 0.9 g). Vegan, gluten-free; sesame. Chickpeas 68%, rapeseed+olive oil, tahini, caramelised garlic 8%. Micros = USDA 'hummus, commercial' unscaled (237 kcal / 17.8 g fat / 5.4 g fiber — close match); label protein 5 g vs proxy 7.8 g, so chickpea-derived minerals may run ~20% high. Fatty acids from ~12 g oils + ~4 g tahini fat.",
+    values: {
+      kcal: 240, protein: 5, fat: 18.5, carbs: 11, fiber: 5,
+      vitA: 1, vitB1: 0.1, vitB2: 0.06, vitB3: 0.6, vitB5: null, vitB6: 0.2, vitB7: null, vitB9: 80, vitB12: 0, vitC: 0, vitD: 0, vitE: 2.5, vitK: 10,
+      calcium: 40, iron: 2.4, magnesium: 70, zinc: 1.8, selenium: 2.6, potassium: 230, phosphorus: 175, copper: 0.5, manganese: 0.8, iodine: null, chromium: null, sodium: 360,
+      epa: 0, dha: 0, ala: 700, omega6: 4400, saturated: 2,
+      choline: 30, creatine: 0, taurine: 0, coq10: null, astaxanthin: 0, betaCarotene: null, lutein: null, lycopene: 0, betaine: null, glycine: 200, collagen: 0, sulforaphane: 0,
+    },
+  },
+  {
+    id: "starPopcornCascaval",
+    name: "Star Popcorn cu gust de cașcaval",
+    emoji: "🍿",
+    brand: "Star (RO)",
+    packageG: 80,
+    source: "label+estimated",
+    confidence: "moderate",
+    notes: "Label: kcal, protein, fat, carbs, fiber, saturated, sodium (salt 2.0 g), trans fat 0.10 g. Vegetarian; milk (cheese powder 1.6%, milk powder, lactose); MSG/guanylate/inosinate; iodised salt (iodine present, amount unknown). Corn fraction = label carbs 51 / air-popped 77.8 = 0.66; minerals, B-vitamins, lutein = 0.66 × USDA 'popcorn, air-popped'. Vit E/K and fatty acids from ~21 g rapeseed oil.",
+    values: {
+      kcal: 473, protein: 10.3, fat: 23, carbs: 51, fiber: 10.2,
+      vitA: 2, vitB1: 0.07, vitB2: null, vitB3: 1.5, vitB5: 0.28, vitB6: 0.1, vitB7: null, vitB9: 20, vitB12: 0, vitC: 0, vitD: 0, vitE: 4, vitK: 15,
+      calcium: 20, iron: 2.1, magnesium: 95, zinc: 2.0, selenium: null, potassium: 220, phosphorus: 235, copper: 0.17, manganese: 0.7, iodine: null, chromium: null, sodium: 800,
+      epa: 0, dha: 0, ala: 1900, omega6: 4800, saturated: 1.9,
+      choline: null, creatine: 0, taurine: 0, coq10: null, astaxanthin: 0, betaCarotene: null, lutein: 960, lycopene: 0, betaine: null, glycine: 410, collagen: 0, sulforaphane: 0,
+    },
+  },
+  // added 2026-10-21
+  {
+    id: "ribellaHummusItaliano",
+    name: "Ribella Hummus Italiano (Tomato & Garlic)",
+    emoji: "🫘",
+    brand: "Ribella (RS)",
+    packageG: 200,
+    source: "label+estimated",
+    confidence: "moderate",
+    notes: "Label: kcal 231, protein 5, fat 18.7 (sat 1.7), carbs 9.3 (sugars 3), fiber 3.2, sodium (salt 1.3 g). Vegan, gluten-free; sesame. Chickpeas 66%, rapeseed+olive oil, vegetables (carrot, onion), tahini, tomato powder 2%, sugar, garlic powder 1.5%. Micros = USDA 'hummus, commercial' ×0.95 (chickpea share slightly below the caramelized-garlic SKU) + 0.02 × USDA tomato powder (lycopene ~46 mg/100 g → ~900 µg; K, vit C, β-carotene). Fatty acids from ~12 g oils + ~4 g tahini fat.",
+    values: {
+      kcal: 231, protein: 5, fat: 18.7, carbs: 9.3, fiber: 3.2,
+      vitA: 5, vitB1: 0.1, vitB2: 0.06, vitB3: 0.6, vitB5: null, vitB6: 0.2, vitB7: null, vitB9: 76, vitB12: 0, vitC: 2, vitD: 0, vitE: 2.5, vitK: 10,
+      calcium: 40, iron: 2.3, magnesium: 68, zinc: 1.7, selenium: 2.5, potassium: 260, phosphorus: 170, copper: 0.5, manganese: 0.8, iodine: null, chromium: null, sodium: 520,
+      epa: 0, dha: 0, ala: 700, omega6: 4400, saturated: 1.7,
+      choline: 29, creatine: 0, taurine: 0, coq10: null, astaxanthin: 0, betaCarotene: 50, lutein: null, lycopene: 900, betaine: null, glycine: 200, collagen: 0, sulforaphane: 0,
+    },
+  },
+  {
+    id: "powerBitesDatesHazelnut",
+    name: "Power Bites — Dates & Hazelnuts, coconut coated",
+    emoji: "🥥",
+    brand: "Power Bites (TR; imp. Global Net Grid Pro, RO)",
+    ean: "8697950816670",
+    packageG: 96,
+    source: "label+estimated",
+    confidence: "moderate",
+    notes: "Label: kcal 433, protein 6.71, fat 17.44 (sat 5.86), carbs 57.74 (sugars 42.81 — all from dates, no added sugar), fiber 9.26, sodium (salt 0.21 g). Vegan, gluten-free; hazelnuts; may contain pistachio, peanut, almond, other nuts. Dates 65% (Saudi), hazelnuts 16%, cocoa mass 7%, coconut 5%, chickpea flour, sea salt. Micros = 0.65 × USDA dates (deglet noor) + 0.16 × USDA hazelnuts + 0.07 × cocoa mass (unsweetened baking chocolate) + 0.05 × dried coconut. Hazelnuts drive vit E, Mn, Cu; cocoa drives Mg, Fe. ~43 g sugar/100 g: one 96 g pack is ~41 g sugar and ~416 kcal.",
+    values: {
+      kcal: 433, protein: 6.71, fat: 17.44, carbs: 57.74, fiber: 9.26,
+      vitA: 1, vitB1: 0.14, vitB2: 0.07, vitB3: 1.4, vitB5: 0.7, vitB6: 0.22, vitB7: null, vitB9: 31, vitB12: 0, vitC: 1, vitD: 0, vitE: 2.5, vitK: 4,
+      calcium: 56, iron: 2.5, magnesium: 98, zinc: 1.2, selenium: 1, potassium: 636, phosphorus: 124, copper: 0.72, manganese: 1.6, iodine: null, chromium: null, sodium: 84,
+      epa: 0, dha: 0, ala: 14, omega6: 1300, saturated: 5.86,
+      choline: 14, creatine: 0, taurine: 0, coq10: null, astaxanthin: 0, betaCarotene: 5, lutein: 65, lycopene: 0, betaine: null, glycine: 300, collagen: 0, sulforaphane: 0,
+    },
+  },
+  {
+    id: "bornWinner35CookiesCream",
+    name: "Born Winner High Protein 35% bar — Cookies & Cream",
+    emoji: "🍪",
+    brand: "Born Winner (made in Italy)",
+    ean: "5060961650404",
+    packageG: 75,
+    source: "label+estimated",
+    confidence: "low",
+    vegetarian: false,
+    notes: "NOT vegetarian: hydrolysed bovine collagen. Label (per 100 g; 75 g bar = 250 kcal / 26 g protein): kcal 334, protein 35, fat 11 (sat 5.2), carbs 37 (polyols 33, sugars 2.1), fiber 0.4, sodium (salt 0.12 g). Milk, soy; may contain gluten, egg, peanut, almond, hazelnut. Ingredients: protein blend (milk protein, whey protein concentrate), maltitol, sorbitol, milk coating 12% (maltitol, palm/palm-kernel/shea fats, fat-reduced cocoa 0.4%, sweet whey powder 1%, skimmed milk powder 0.5%, lecithins), sunflower oil, hydrolysed bovine collagen, flavouring, soy protein isolate. Milk protein dominant, so calcium/phosphorus are higher than the 50% hazelnut bar but the blend ratio is undisclosed — placeholders (Ca range 300–900). Collagen present, amount undisclosed. 33 g polyols/100 g → 25 g per bar; the pack itself warns of laxative effect.",
+    values: {
+      kcal: 334, protein: 35, fat: 11, carbs: 37, fiber: 0.4,
+      vitA: 10, vitB1: null, vitB2: 0.4, vitB3: null, vitB5: null, vitB6: null, vitB7: null, vitB9: null, vitB12: 0.6, vitC: 0, vitD: 0, vitE: null, vitK: null,
+      calcium: 500, iron: 0.5, magnesium: 40, zinc: 1.5, selenium: null, potassium: 250, phosphorus: 450, copper: null, manganese: null, iodine: null, chromium: null, sodium: 48,
+      epa: 0, dha: 0, ala: null, omega6: null, saturated: 5.2,
+      choline: null, creatine: null, taurine: null, coq10: null, astaxanthin: 0, betaCarotene: 0, lutein: 0, lycopene: 0, betaine: null, glycine: null, collagen: null, sulforaphane: 0,
+    },
+  },
+  {
+    id: "sanovitaMusliMerisoare",
+    name: "SanoVita Müsli Merișoare (cranberry muesli)",
+    emoji: "🥣",
+    brand: "SanoVita",
+    packageG: 400,
+    source: "label+estimated",
+    confidence: "moderate",
+    notes: "Label: kcal 374, protein 9.28, fat 9.23 (sat 3.59), carbs 59.6 (sugars 20.0), fiber 7.92, sodium (salt 0.21 g), magnesium 67.8 mg, thiamin 0.22 mg, iron 3.73 mg. Serving 60 g (≈224 kcal, 12 g sugar). Vegan by ingredients; contains gluten (oat, wheat, barley malt), sulphites; may contain milk, sesame, soy, nuts, peanuts, mustard. Whole-grain flakes 52% (oat, wheat), raisins 13.5% (sunflower oil, SO2), candied cranberries 12% (cranberry, sugar, oil), corn flakes 7%, coconut flakes, date cubes 5%, sunflower seeds 3%, bran wheat flakes (iodised salt). Micros = 0.52 × mean(USDA rolled oats, wheat flakes) + 0.135 × raisins + 0.05 × dates + 0.03 × sunflower kernels + ~0.05 × dried coconut; candied cranberry and corn flakes contribute ~nothing. Sat fat 3.59 is mostly the coconut. Iodised salt → iodine present, amount unknown.",
+    values: {
+      kcal: 374, protein: 9.28, fat: 9.23, carbs: 59.6, fiber: 7.92,
+      vitA: 0, vitB1: 0.22, vitB2: 0.07, vitB3: 1.2, vitB5: 0.6, vitB6: 0.12, vitB7: null, vitB9: 30, vitB12: 0, vitC: 0, vitD: 0, vitE: 1.5, vitK: 2,
+      calcium: 35, iron: 3.73, magnesium: 67.8, zinc: 2.0, selenium: 15, potassium: 350, phosphorus: 270, copper: 0.4, manganese: 2.3, iodine: null, chromium: null, sodium: 84,
+      epa: 0, dha: 0, ala: 50, omega6: 2000, saturated: 3.59,
+      choline: 15, creatine: 0, taurine: 0, coq10: null, astaxanthin: 0, betaCarotene: 0, lutein: 95, lycopene: 0, betaine: 20, glycine: 450, collagen: 0, sulforaphane: 0,
+    },
+  },
+  {
+    id: "parmesanAged",
+    name: "Parmesan, aged (hard)",
+    emoji: "🧀",
+    source: "usda",
+    confidence: "high",
+    vegetarian: false,
+    notes: "USDA SR Legacy 01032 'Cheese, parmesan, hard' — generic, no pack. Sodium varies 1,200–1,800 mg by producer and age; grated is higher. NOT vegetarian in the strict sense: Parmigiano Reggiano / Grana Padano are made with calf rennet by law; most products sold as 'parmesan' in RO are too unless labelled vegetable rennet. Iodine present but variable — left null.",
+    values: {
+      kcal: 392, protein: 35.8, fat: 25.8, carbs: 3.2, fiber: 0,
+      vitA: 201, vitB1: 0.04, vitB2: 0.33, vitB3: 0.27, vitB5: 0.45, vitB6: 0.09, vitB7: null, vitB9: 7, vitB12: 1.2, vitC: 0, vitD: 0.5, vitE: 0.22, vitK: 1.7,
+      calcium: 1184, iron: 0.82, magnesium: 44, zinc: 2.75, selenium: 22.5, potassium: 92, phosphorus: 694, copper: 0.32, manganese: 0.02, iodine: null, chromium: null, sodium: 1602,
+      epa: 0, dha: 0, ala: 100, omega6: 380, saturated: 16.4,
+      choline: 15, creatine: 0, taurine: 0, coq10: null, astaxanthin: 0, betaCarotene: 0, lutein: 0, lycopene: 0, betaine: 0, glycine: 630, collagen: 0, sulforaphane: 0,
     },
   },
 ];

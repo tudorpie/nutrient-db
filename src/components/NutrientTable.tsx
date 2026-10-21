@@ -127,6 +127,9 @@ export default function NutrientTable() {
           <span className="text-neutral-600 font-normal text-sm ml-2">
             per 100 g
           </span>
+          <a href="/log" className="text-neutral-500 hover:text-neutral-200 font-normal text-sm ml-4">
+            intake log &rarr;
+          </a>
         </h1>
 
         {/* Category filters */}
