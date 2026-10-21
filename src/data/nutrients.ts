@@ -569,6 +569,23 @@ export const foods: Food[] = [
       choline: 15, creatine: 0, taurine: 0, coq10: null, astaxanthin: 0, betaCarotene: 0, lutein: 0, lycopene: 0, betaine: 0, glycine: 630, collagen: 0, sulforaphane: 0,
     },
   },
+  {
+    id: "carposAlmondNatural",
+    name: "Carpos Almond Natural (almond drink, fortified)",
+    emoji: "🥛",
+    brand: "Olympus (GR)",
+    source: "label",
+    confidence: "high",
+    vegetarian: true,
+    notes: "Per 100 g (≈100 ml; log in grams or ml interchangeably). Label (olympusfoods.com + pack): kcal 30, fat 1.5 (sat 0.1), carbs 2.8 (all sugars — added sugar is the 3rd ingredient), fiber 1.0, protein 0.7, salt 0.25, calcium 120 mg, D2 0.75 µg, E 1.80 mg, B2 0.21 mg, B12 0.38 µg. Water, almond 2.5%, sugar, edible fibre, gellan/locust bean gum, sunflower lecithin, sea salt, flavouring, tricalcium phosphate, sodium bicarbonate, vitamins. Only non-label values: sodium = salt × 400; phosphorus from the tricalcium phosphate that supplies the 120 mg Ca (≈62 mg); trace K/Mg/Fe/Zn from 2.5% almond. Vitamin D is D2 (ergocalciferol), less potent per µg than D3 at raising 25(OH)D. Vegan; may contain traces of other nuts.",
+    values: {
+      kcal: 30, protein: 0.7, fat: 1.5, carbs: 2.8, fiber: 1.0,
+      vitA: 0, vitB1: 0, vitB2: 0.21, vitB3: 0.1, vitB5: 0, vitB6: 0, vitB7: null, vitB9: 1, vitB12: 0.38, vitC: 0, vitD: 0.75, vitE: 1.8, vitK: 0,
+      calcium: 120, iron: 0.1, magnesium: 7, zinc: 0.08, selenium: 0, potassium: 18, phosphorus: 62, copper: 0.03, manganese: 0.06, iodine: 0, chromium: null, sodium: 100,
+      epa: 0, dha: 0, ala: 0, omega6: 300, saturated: 0.1,
+      choline: 1, creatine: 0, taurine: 0, coq10: null, astaxanthin: 0, betaCarotene: 0, lutein: 0, lycopene: 0, betaine: 0, glycine: 30, collagen: 0, sulforaphane: 0,
+    },
+  },
 ];
 
 export function formatValue(v: number | null): string {
