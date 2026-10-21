@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { categories, nutrients, nutrientMap, formatValue } from "@/data/nutrients";
 import { defaultTargets, limitIds } from "@/data/targets";
@@ -27,10 +27,36 @@ export interface DayTotals {
 const STORAGE_KEY = "nutrient-db:targets";
 const MACRO_IDS = ["kcal", "protein", "fat", "carbs", "fiber", "sodium"];
 
-function loadOverrides(): Record<string, number> {
+// localStorage as an external store: the raw string is the snapshot (stable
+// identity between writes), parsed once per change below. Server snapshot is
+// null so SSR and the first client render agree (no overrides, no % yet).
+const CHANGE_EVENT = "nutrient-db:targets-changed";
+
+function subscribe(cb: () => void) {
+  window.addEventListener("storage", cb);
+  window.addEventListener(CHANGE_EVENT, cb);
+  return () => {
+    window.removeEventListener("storage", cb);
+    window.removeEventListener(CHANGE_EVENT, cb);
+  };
+}
+
+function getSnapshot(): string | null {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as Record<string, number>) : {};
+    return localStorage.getItem(STORAGE_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+function getServerSnapshot(): string | null {
+  return null;
+}
+
+function parseOverrides(raw: string | null): Record<string, number> {
+  if (!raw) return {};
+  try {
+    return JSON.parse(raw) as Record<string, number>;
   } catch {
     return {};
   }
@@ -42,6 +68,7 @@ function saveOverrides(o: Record<string, number>) {
   } catch {
     /* private mode etc. — overrides just won't persist */
   }
+  window.dispatchEvent(new Event(CHANGE_EVENT));
 }
 
 function pctClass(pct: number | null, isLimit: boolean): string {
@@ -58,14 +85,10 @@ function pctClass(pct: number | null, isLimit: boolean): string {
 }
 
 export default function LogView({ days }: { days: DayTotals[] }) {
-  const [overrides, setOverrides] = useState<Record<string, number>>({});
+  const raw = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const loaded = raw !== null;
+  const overrides = useMemo(() => parseOverrides(raw), [raw]);
   const [editing, setEditing] = useState(false);
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    setOverrides(loadOverrides());
-    setLoaded(true);
-  }, []);
 
   // Effective target: browser override > targets.ts > RDA from the table.
   const target = useMemo(() => {
@@ -84,12 +107,10 @@ export default function LogView({ days }: { days: DayTotals[] }) {
     const v = parseFloat(raw);
     if (raw.trim() === "" || Number.isNaN(v)) delete next[id];
     else next[id] = v;
-    setOverrides(next);
     saveOverrides(next);
   }
 
   function resetAll() {
-    setOverrides({});
     saveOverrides({});
   }
 
